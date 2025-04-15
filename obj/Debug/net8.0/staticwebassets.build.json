@@ -1,0 +1,12 @@
+{
+  "Version": 1,
+  "Hash": "D0a1D2+/ed0svLOwkBfPi3huKKp3okUBMYYSl+hzdT0=",
+  "Source": "measurement-generator",
+  "BasePath": "_content/measurement-generator",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": [],
+  "Endpoints": []
+}

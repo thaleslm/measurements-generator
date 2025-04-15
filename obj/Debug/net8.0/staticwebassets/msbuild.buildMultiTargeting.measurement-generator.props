@@ -1,0 +1,3 @@
+﻿<Project>
+  <Import Project="..\build\measurement-generator.props" />
+</Project>

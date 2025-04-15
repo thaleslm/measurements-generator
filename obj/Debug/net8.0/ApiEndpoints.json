@@ -1,0 +1,32 @@
+[
+  {
+    "ContainingType": "measurement_generator.Controllers.CSVController",
+    "Method": "get",
+    "RelativePath": "erps/all",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "measurement_generator.Controllers.CSVController",
+    "Method": "verifyWhatErpsHaveMeasurements",
+    "RelativePath": "erps/csv",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "measurement_generator.Controllers.CSVController",
+    "Method": "Register",
+    "RelativePath": "erps/register",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  }
+]
