@@ -5,6 +5,7 @@ C:\Users\woami\Desktop\Backends\measurement-generator\obj\Debug\net8.0\measureme
 C:\Users\woami\Desktop\Backends\measurement-generator\obj\Debug\net8.0\measurement-generator.csproj.CoreCompileInputs.cache
 C:\Users\woami\Desktop\Backends\measurement-generator\obj\Debug\net8.0\measurement-generator.MvcApplicationPartsAssemblyInfo.cs
 C:\Users\woami\Desktop\Backends\measurement-generator\obj\Debug\net8.0\measurement-generator.MvcApplicationPartsAssemblyInfo.cache
+C:\Users\woami\Desktop\Backends\measurement-generator\obj\Debug\net8.0\measurement-generator.sourcelink.json
 C:\Users\woami\Desktop\Backends\measurement-generator\bin\Debug\net8.0\appsettings.Development.json
 C:\Users\woami\Desktop\Backends\measurement-generator\bin\Debug\net8.0\appsettings.json
 C:\Users\woami\Desktop\Backends\measurement-generator\bin\Debug\net8.0\measurement-generator.staticwebassets.endpoints.json

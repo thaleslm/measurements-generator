@@ -8,14 +8,21 @@ builder.Services.AddDbContext<AppDBContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 // Adiciona o MyService como um IHostedService
 builder.Services.AddScoped<CSVReaderService>();
+builder.Services.AddScoped<ErpsService>();
 //builder.Services.AddHostedService<ScheduledTaskService>();
 
 // Adiciona os serviços ao contêiner (DI)
 builder.Services.AddControllers();
+builder.Services.AddSwaggerGen();
 
 // Construindo a aplicação
 var app = builder.Build();
 
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+ }
 // Configura o middleware para redirecionamento para HTTPS
 app.UseHttpsRedirection();
 

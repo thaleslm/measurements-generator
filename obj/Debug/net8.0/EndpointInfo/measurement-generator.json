@@ -5,7 +5,43 @@
     "version": "1.0"
   },
   "paths": {
-    "/": {
+    "/erps/register": {
+      "get": {
+        "tags": [
+          "CSV"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/erps/all": {
+      "get": {
+        "tags": [
+          "CSV"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/erps/csv": {
+      "get": {
+        "tags": [
+          "CSV"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/erps/measurements": {
       "get": {
         "tags": [
           "CSV"

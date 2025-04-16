@@ -30,6 +30,6 @@ public class Erp
     public ErpRecords ErpRecords { get; set; }
     public double IndexH { get; set; }
 
-    public Boolean haveFile { get; set; }
+    public Boolean HaveFile { get; set; }
 
 }

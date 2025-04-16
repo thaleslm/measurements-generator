@@ -2,29 +2,32 @@
 using CsvHelper.Configuration;
 using measurement_generator.Models.csv;
 using measurement_generator.Models.Erp;
+using measurement_generator.Models.Request;
 using measurement_generator.Repository;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
+using System.Diagnostics.Metrics;
 using System.Globalization;
 
 namespace measurement_generator.Services;
 public class CSVReaderService
 {
     private readonly AppDBContext _db;
+    private readonly ErpsService _erpsService;
     CsvConfiguration config = new CsvConfiguration(CultureInfo.InvariantCulture)
     {
-        HeaderValidated = null, // Desliga a validação de headers
-        MissingFieldFound = null, // Desliga erro de campo faltando
+        HeaderValidated = null, // turns off header validation
+        MissingFieldFound = null, // turn off error missing field
+
     };
 
-    public CSVReaderService(AppDBContext db)
+    public CSVReaderService(AppDBContext db,ErpsService erpsService)
     {
         _db = db;
-
+        _erpsService = erpsService;
     }
     public async Task RegisterCsv()
     {
-       
         using var reader = new StreamReader("C:\\Users\\woami\\Desktop\\Backends\\measurement-generator\\assets\\ErpCadastradas.csv");
         using var csv = new CsvReader(reader, config);
 
@@ -36,10 +39,10 @@ public class CSVReaderService
             {
                 DnsIot = registro.ERP_Cod,
                 Type = registro.Type,
-                Active = true, // ou false dependendo da lógica
+                Active = true, 
                 ScopeId = registro.ScopeId,
                 Status = 1,
-                AssociatedGroups = new List<int>(), // ou o que precisar
+                AssociatedGroups = new List<int>(), 
                 Authenticated = false,
                 PackageQuantity = 0,
                 Observations = string.Empty,
@@ -55,55 +58,133 @@ public class CSVReaderService
         }
 
         await _db.SaveChangesAsync();
-   
     }
 
 
-    public async Task<List<Erp>> getAllErp()
-    {
-        var erps = await _db.Erps.ToListAsync();
-        return erps;
-    }
+ 
 
     public async Task<object> VerifyWhatErpHaveCSV()
     {
-
-        // 1. Lê todos os arquivos da pasta
+        // To reading all folder files
         var filePaths = Directory.GetFiles("C:\\Users\\woami\\Desktop\\measurements-comgas", "*.csv");
-
-        // 2. Extrai o nome do arquivo sem a extensão e normaliza (ex: "Erp1.csv" -> "erp1")
+        // To extract the name without the extension and normalizes (example: "ERP1.csv" to "erp1")
         var fileDnsList = filePaths
             .Select(path => Path.GetFileNameWithoutExtension(path).Trim().ToLower())
             .ToHashSet();
-
-        // 3. Pega os DnsIot dos ERPs no banco e normaliza também
+        // Get the DnsIot from erps and normalizes it too
         var erps = await _db.Erps
-            .Where(e => !string.IsNullOrEmpty(e.DnsIot)) // Pega o DnsIot, CodId e o atributo haveFile
+            .Where(e => !string.IsNullOrEmpty(e.DnsIot)) 
             .ToListAsync();
-
-        // 4. Atualiza o atributo 'haveFile' para true nos ERPs que têm arquivo correspondente
+        // Update the atrribute "HaveFile" to true in Erps that have a corresponding file
         foreach (var erp in erps)
         {
             if (fileDnsList.Contains(erp.DnsIot.Trim().ToLower()))
             {
-                // Se o ERP tiver um arquivo correspondente, marca como true
-                erp.haveFile = true;
+                erp.HaveFile = true;
             }
         }
-
-        // 5. Salva as alterações no banco de dados
+        // Save Changes in the dataBase
         await _db.SaveChangesAsync();
-
-        // 6. Retorna a quantidade de ERPs com arquivo correspondente
+        // return all erps with the attribute "HaveFile" equal true and amount exist
         var erpsComArquivo = erps
-            .Where(erp => erp.haveFile)
+            .Where(erp => erp.HaveFile)
             .ToList();
 
         return erpsComArquivo;
-
-
-
     }
+
+    public async Task<List<Erp>> ReadCsvfromErps(DateTime targetDateTime)
+    {
+        List<Erp> erps = await _erpsService.GetErpsWithHaveFile();
+        string[] filePaths = Directory.GetFiles("C:\\Users\\woami\\Desktop\\measurements-comgas", "*.csv");
+        int specificLine = 5;
+        foreach(var erp in erps)
+
+        {
+            string targetName = $"{erp.DnsIot}.csv";
+            string? matchingFile = filePaths.FirstOrDefault(filePath => Path.GetFileName(filePath).Equals(targetName, StringComparison.OrdinalIgnoreCase));
+
+            if(matchingFile != null)
+            { 
+                string? line = ReadLineByDateTime(matchingFile, targetDateTime);
+                if (line != null)
+                {
+                    string[] columns = line.Split(',');
+
+                    if (ParseFloat(columns[1]) > 0 &&
+                    ParseFloat(columns[2]) > 0 &&
+                    ParseFloat(columns[3]) > 0 &&
+                    ParseFloat(columns[4]) > 0 &&
+                    ParseFloat(columns[5]) > 0 &&
+                    ParseFloat(columns[6]) > 0)
+                    {
+                        var timestamp = DateTime.ParseExact(columns[0], "dd/MM/yyyy HH:mm:ss", CultureInfo.InvariantCulture);
+
+                        var existing = await _db.LastMeasurements
+                            .FirstOrDefaultAsync(x => x.codId == erp.CodId );
+
+                        var measurement = new LastAuxiliary12_000_0
+                        {
+                            codId = erp.CodId,
+                            timestamp = timestamp,
+                            pressureInputLowLimit = ParseFloat(columns[1]),
+                            pressureInputHighLimit = ParseFloat(columns[2]),
+                            pressureInput = ParseFloat(columns[3]),
+                            pressureOutputLowLimit = ParseFloat(columns[4]),
+                            pressureOutputHighLimit = ParseFloat(columns[5]),
+                            pressureOutput = ParseFloat(columns[6]),
+                            shutoffZASL = new List<float?> { ParseFloat(columns[7]), ParseFloat(columns[8]) },
+                            flow = ParseFloat(columns[9]),
+                            PDT = new List<float?> { ParseFloat(columns[10]), ParseFloat(columns[11]) },
+                            regulator = new List<float?> { ParseFloat(columns[12]), ParseFloat(columns[13]) },
+                            status = 0,
+                            BatteryReg = new List<float?>(),
+                            type = 1
+                        };
+
+                        if (existing != null)
+                        {
+                            // Atualiza os campos
+                            _db.Entry(existing).CurrentValues.SetValues(measurement);
+                        }
+                        else
+                        {
+                            _db.LastMeasurements.Add(measurement);
+                        }
+
+                    }
+                }    
+
+            }
+        }
+       await _db.SaveChangesAsync();
+
+        return erps;
+    }
+    private float? ParseFloat(string? input)
+    {
+        if (input == null) return null;
+        return float.TryParse(input, NumberStyles.Any, CultureInfo.InvariantCulture, out float value)
+            ? value
+            : null;
+    }
+    public string? ReadLineByDateTime(string filePath, DateTime targetDateTime)
+    {
+        using var reader = new StreamReader(filePath);
+        string line;
+        //format csv
+        string targetText = targetDateTime.ToString("dd/MM/yyyy HH:mm:ss");
+
+        while ((line = reader.ReadLine()) != null)
+        {
+            if (line.StartsWith(targetText))
+            {
+                return line;
+            }
+        }
+        return null;
+    }
+
 }
 
 
