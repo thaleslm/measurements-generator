@@ -25,5 +25,8 @@ namespace measurement_generator.Services
             return erps;
         }
 
+        public async Task<Boolean> ExistErpsInTheDB() {
+           return await _db.Erps.AnyAsync();
+        }
     }
 }

@@ -8,12 +8,12 @@ namespace measurement_generator.Models.Request
         public int Id { get; set; }
         public int codId { get; set; }
         public DateTime? timestamp { get; set; }
-        public float? pressureInputHighLimit { get; set; }
-        public float? pressureInputLowLimit { get; set; }
-        public float? pressureInput { get; set; }
-        public float? pressureOutput { get; set; }
-        public float? pressureOutputHighLimit { get; set; }
-        public float? pressureOutputLowLimit { get; set; }
+        public float pressureInputHighLimit { get; set; }
+        public float pressureInputLowLimit { get; set; }
+        public float pressureInput { get; set; }
+        public float pressureOutput { get; set; }
+        public float pressureOutputHighLimit { get; set; }
+        public float pressureOutputLowLimit { get; set; }
         public List<float?> shutoffZASL { get; set; }
         public float? flow { get; set; }
         public List<float?> PDT { get; set; }

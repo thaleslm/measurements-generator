@@ -97,69 +97,110 @@ public class CSVReaderService
     {
         List<Erp> erps = await _erpsService.GetErpsWithHaveFile();
         string[] filePaths = Directory.GetFiles("C:\\Users\\woami\\Desktop\\measurements-comgas", "*.csv");
-        int specificLine = 5;
-        foreach(var erp in erps)
+        List<LastAuxiliary12_000_0> listMeasurements = new List<LastAuxiliary12_000_0>();
 
+        Random rand = new Random();
+
+        foreach (var erp in erps)
         {
             string targetName = $"{erp.DnsIot}.csv";
             string? matchingFile = filePaths.FirstOrDefault(filePath => Path.GetFileName(filePath).Equals(targetName, StringComparison.OrdinalIgnoreCase));
+            string? line = matchingFile != null ? ReadLineByDateTime(matchingFile, targetDateTime) : null;
+            string[] columns = line?.Split(',');
 
-            if(matchingFile != null)
-            { 
-                string? line = ReadLineByDateTime(matchingFile, targetDateTime);
-                if (line != null)
+            bool hasValidData = columns != null &&
+                                ParseFloat(columns[1]) > 0 &&
+                                ParseFloat(columns[2]) > 0 &&
+                                ParseFloat(columns[3]) > 0 &&
+                                ParseFloat(columns[4]) > 0 &&
+                                ParseFloat(columns[5]) > 0 &&
+                                ParseFloat(columns[6]) > 0;
+
+            var existing = await _db.LastMeasurements.FirstOrDefaultAsync(x => x.codId == erp.CodId);
+
+            if (hasValidData)
+            {
+                var timestamp = DateTime.ParseExact(columns[0], "dd/MM/yyyy HH:mm:ss", CultureInfo.InvariantCulture);
+
+                var measurement = new LastAuxiliary12_000_0
                 {
-                    string[] columns = line.Split(',');
+                    codId = erp.CodId,
+                    timestamp = timestamp,
+                    pressureInputLowLimit = (float)ParseFloat(columns[1]),
+                    pressureInputHighLimit = (float)ParseFloat(columns[2]),
+                    pressureInput = (float)ParseFloat(columns[3]),
+                    pressureOutputLowLimit = (float)ParseFloat(columns[4]),
+                    pressureOutputHighLimit = (float)ParseFloat(columns[5]),
+                    pressureOutput = (float)ParseFloat(columns[6]),
+                    shutoffZASL = new List<float?> { ParseFloat(columns[7]), ParseFloat(columns[8]) },
+                    flow = ParseFloat(columns[9]),
+                    PDT = new List<float?> { ParseFloat(columns[10]), ParseFloat(columns[11]) },
+                    regulator = new List<float?> { ParseFloat(columns[12]), ParseFloat(columns[13]) },
+                    status = 0,
+                    BatteryReg = new List<float?>(),
+                    type = 1
+                };
 
-                    if (ParseFloat(columns[1]) > 0 &&
-                    ParseFloat(columns[2]) > 0 &&
-                    ParseFloat(columns[3]) > 0 &&
-                    ParseFloat(columns[4]) > 0 &&
-                    ParseFloat(columns[5]) > 0 &&
-                    ParseFloat(columns[6]) > 0)
-                    {
-                        var timestamp = DateTime.ParseExact(columns[0], "dd/MM/yyyy HH:mm:ss", CultureInfo.InvariantCulture);
+                if (existing != null)
+                {
+                    updateErpsValue(existing, measurement);
+                }
+                else
+                {
+                    _db.LastMeasurements.Add(measurement);
+                }
 
-                        var existing = await _db.LastMeasurements
-                            .FirstOrDefaultAsync(x => x.codId == erp.CodId );
-
-                        var measurement = new LastAuxiliary12_000_0
-                        {
-                            codId = erp.CodId,
-                            timestamp = timestamp,
-                            pressureInputLowLimit = ParseFloat(columns[1]),
-                            pressureInputHighLimit = ParseFloat(columns[2]),
-                            pressureInput = ParseFloat(columns[3]),
-                            pressureOutputLowLimit = ParseFloat(columns[4]),
-                            pressureOutputHighLimit = ParseFloat(columns[5]),
-                            pressureOutput = ParseFloat(columns[6]),
-                            shutoffZASL = new List<float?> { ParseFloat(columns[7]), ParseFloat(columns[8]) },
-                            flow = ParseFloat(columns[9]),
-                            PDT = new List<float?> { ParseFloat(columns[10]), ParseFloat(columns[11]) },
-                            regulator = new List<float?> { ParseFloat(columns[12]), ParseFloat(columns[13]) },
-                            status = 0,
-                            BatteryReg = new List<float?>(),
-                            type = 1
-                        };
-
-                        if (existing != null)
-                        {
-                            // Atualiza os campos
-                            _db.Entry(existing).CurrentValues.SetValues(measurement);
-                        }
-                        else
-                        {
-                            _db.LastMeasurements.Add(measurement);
-                        }
-
-                    }
-                }    
-
+                listMeasurements.Add(measurement);
             }
-        }
-       await _db.SaveChangesAsync();
+            else if (existing != null)
+            {
+                // Função para simular com variação de ±10%
+                float Simulate(float value) =>
+                    value * (float)(1 + (rand.NextDouble() * 0.2 - 0.1));
 
-        return erps;
+                var simulated = new LastAuxiliary12_000_0
+                {
+                    codId = existing.codId,
+                    timestamp = targetDateTime,
+                    pressureInputLowLimit = Simulate(existing.pressureInputLowLimit),
+                    pressureInputHighLimit = Simulate(existing.pressureInputHighLimit),
+                    pressureInput = Simulate(existing.pressureInput),
+                    pressureOutputLowLimit = Simulate(existing.pressureOutputLowLimit),
+                    pressureOutputHighLimit = Simulate(existing.pressureOutputHighLimit),
+                    pressureOutput = Simulate(existing.pressureOutput),
+                    shutoffZASL = existing.shutoffZASL,
+                    flow = existing.flow,
+                    PDT = existing.PDT,
+                    regulator = existing.regulator,
+                    status = existing.status,
+                    BatteryReg = existing.BatteryReg,
+                    type = existing.type
+                };
+
+                updateErpsValue(existing, simulated);
+                listMeasurements.Add(simulated);
+            }
+            await _db.SaveChangesAsync();
+        }
+            return erps;
+    }
+
+    public void updateErpsValue(LastAuxiliary12_000_0 existing, LastAuxiliary12_000_0 measurement)
+    {
+        existing.timestamp = measurement.timestamp;
+        existing.pressureInputLowLimit = measurement.pressureInputLowLimit;
+        existing.pressureInputHighLimit = measurement.pressureInputHighLimit;
+        existing.pressureInput = measurement.pressureInput;
+        existing.pressureOutputLowLimit = measurement.pressureOutputLowLimit;
+        existing.pressureOutputHighLimit = measurement.pressureOutputHighLimit;
+        existing.pressureOutput = measurement.pressureOutput;
+        existing.shutoffZASL = measurement.shutoffZASL;
+        existing.flow = measurement.flow;
+        existing.PDT = measurement.PDT;
+        existing.regulator = measurement.regulator;
+        existing.status = measurement.status;
+        existing.BatteryReg = measurement.BatteryReg;
+        existing.type = measurement.type;
     }
     private float? ParseFloat(string? input)
     {

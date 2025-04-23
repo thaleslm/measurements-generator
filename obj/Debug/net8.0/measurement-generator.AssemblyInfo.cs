@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("measurement-generator")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+daa42760812545c03dcc3a984884561b6c1190de")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+1ac2646df495eb41cec451b8c00033dd4f111509")]
 [assembly: System.Reflection.AssemblyProductAttribute("measurement-generator")]
 [assembly: System.Reflection.AssemblyTitleAttribute("measurement-generator")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

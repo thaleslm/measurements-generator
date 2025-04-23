@@ -6,10 +6,11 @@ var builder = WebApplication.CreateBuilder(args);
 // Registrar o AppDBContext com a connection string
 builder.Services.AddDbContext<AppDBContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
 // Adiciona o MyService como um IHostedService
 builder.Services.AddScoped<CSVReaderService>();
 builder.Services.AddScoped<ErpsService>();
-//builder.Services.AddHostedService<ScheduledTaskService>();
+builder.Services.AddHostedService<ScheduledTaskService>();
 
 // Adiciona os serviços ao contêiner (DI)
 builder.Services.AddControllers();

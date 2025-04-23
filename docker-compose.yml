@@ -1,0 +1,36 @@
+version: '3.9'
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: sqlserver
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=MinhaSenhaSuperForte123
+    ports:
+      - "1433:1433"
+    volumes:
+      - sql_data:/var/opt/mssql
+    networks:
+      - mynetwork
+
+  measurement-generator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: measurement-generator
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    ports:
+      - "80:80"
+    depends_on:
+      - sqlserver
+    networks:
+      - mynetwork
+
+volumes:
+  sql_data:
+
+networks:
+  mynetwork:
+    driver: bridge
