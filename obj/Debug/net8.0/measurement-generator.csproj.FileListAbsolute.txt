@@ -171,3 +171,4 @@ C:\Users\woami\Desktop\Backends\measurement-generator\obj\Debug\net8.0\refint\me
 C:\Users\woami\Desktop\Backends\measurement-generator\obj\Debug\net8.0\measurement-generator.pdb
 C:\Users\woami\Desktop\Backends\measurement-generator\obj\Debug\net8.0\measurement-generator.genruntimeconfig.cache
 C:\Users\woami\Desktop\Backends\measurement-generator\obj\Debug\net8.0\ref\measurement-generator.dll
+C:\Users\woami\Desktop\Backends\measurement-generator\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt

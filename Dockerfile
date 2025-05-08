@@ -1,9 +1,6 @@
 # Imagem base para SDK do .NET
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS base
 
-COPY assets ./
-
-
 WORKDIR /app
 
 # Copia o arquivo .csproj e restaura as dependências

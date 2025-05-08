@@ -1,13 +1,14 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using measurement_generator.Models.Erp;
+using System.Globalization;
+using System.Text.Json.Serialization;
 
-namespace measurement_generator.Models.Request
-{
-    public class LastAuxiliary12_000_0
+namespace measurement_generator.Models.csv;
+
+    public class MeasurementsDTO
     {
-        [Key]
-        public int Id { get; set; }
+
         public int codId { get; set; }
-        public DateTime timestamp { get; set; }
+        public string timestamp { get; set; }
         public float pressureInputHighLimit { get; set; }
         public float pressureInputLowLimit { get; set; }
         public float pressureInput { get; set; }
@@ -16,11 +17,10 @@ namespace measurement_generator.Models.Request
         public float pressureOutputLowLimit { get; set; }
         public List<float?> shutoffZASL { get; set; }
         public float? flow { get; set; }
-        public List<float?> PDT { get; set; }
+        public List<float?> pdt { get; set; }
         public List<float?> regulator { get; set; }
-        public List<float?> BatteryReg { get; set; }
-        public float? status { get; set; }
-        public int type = 1;
+        public List<float?> batteryReg { get; set; }
+        public int status { get; set; }
 
         public override string ToString()
         {
@@ -29,8 +29,11 @@ namespace measurement_generator.Models.Request
                    $"OutputLow={pressureOutputLowLimit}, OutputHigh={pressureOutputHighLimit}, Output={pressureOutput}, " +
                    $"Flow={flow}, " +
                    $"Shutoff={string.Join(",", shutoffZASL)}, " +
-                   $"PDT={string.Join(",", PDT)}, " +
+                   $"PDT={string.Join(",", pdt)}, " +
                    $"Regulators={string.Join(",", regulator)}";
         }
+     // Propriedade auxiliar pra setar string direto
+  
+
+
     }
-}

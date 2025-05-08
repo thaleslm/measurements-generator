@@ -1,4 +1,8 @@
-﻿namespace measurement_generator.Services
+﻿using measurement_generator.Models.csv;
+using measurement_generator.Services;
+using Microsoft.Extensions.Configuration;
+
+namespace measurement_generator.Services
 {
     public class ScheduledTaskService : BackgroundService
     {
@@ -15,7 +19,6 @@
             while (!stoppingToken.IsCancellationRequested)
             {
                 var now = DateTime.Now;
-
                 // Calcular o próximo múltiplo de 15 minutos
                 int minutesToNextQuarter = 15 - (now.Minute % 15);
                 if (minutesToNextQuarter == 15 && now.Second == 0)
@@ -59,6 +62,7 @@
             using var scope = _serviceProvider.CreateScope();
             var cSVReaderService = scope.ServiceProvider.GetRequiredService<CSVReaderService>();
             var eRPService = scope.ServiceProvider.GetRequiredService<ErpsService>();
+            var twinsClientService = scope.ServiceProvider.GetRequiredService<DigitalTwinsClientService>();
 
             try
             {
@@ -68,8 +72,8 @@
                     await cSVReaderService.RegisterCsv();
                     await cSVReaderService.VerifyWhatErpHaveCSV();
                 }
-                await cSVReaderService.ReadCsvfromErps(executionTime);
-
+                List<MeasurementsDTO> list = await cSVReaderService.ReadCsvfromErps(executionTime);
+                await twinsClientService.PutMeasurements(list);
 
 
             }

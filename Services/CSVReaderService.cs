@@ -14,21 +14,23 @@ public class CSVReaderService
 {
     private readonly AppDBContext _db;
     private readonly ErpsService _erpsService;
+
     CsvConfiguration config = new CsvConfiguration(CultureInfo.InvariantCulture)
     {
         HeaderValidated = null, // turns off header validation
         MissingFieldFound = null, // turn off error missing field
-
     };
 
-    public CSVReaderService(AppDBContext db,ErpsService erpsService)
+    public CSVReaderService(AppDBContext db,ErpsService erpsService, IConfiguration configuration)
     {
         _db = db;
         _erpsService = erpsService;
+        _configuration = configuration;
     }
     public async Task RegisterCsv()
     {
-        using var reader = new StreamReader("C:\\Users\\woami\\Desktop\\Backends\\measurement-generator\\assets\\ErpCadastradas.csv");
+
+        using var reader = new StreamReader("/app/data/assets/ErpCadastradas.csv");
         using var csv = new CsvReader(reader, config);
 
         var registros = csv.GetRecords<ErpCsvModel>();
@@ -66,7 +68,7 @@ public class CSVReaderService
     public async Task<object> VerifyWhatErpHaveCSV()
     {
         // To reading all folder files
-        var filePaths = Directory.GetFiles("C:\\Users\\woami\\Desktop\\measurements-comgas", "*.csv");
+        var filePaths = Directory.GetFiles("/app/data", "*.csv");
         // To extract the name without the extension and normalizes (example: "ERP1.csv" to "erp1")
         var fileDnsList = filePaths
             .Select(path => Path.GetFileNameWithoutExtension(path).Trim().ToLower())
@@ -93,10 +95,10 @@ public class CSVReaderService
         return erpsComArquivo;
     }
 
-    public async Task<List<Erp>> ReadCsvfromErps(DateTime targetDateTime)
+    public async Task<List<MeasurementsDTO>> ReadCsvfromErps(DateTime targetDateTime)
     {
         List<Erp> erps = await _erpsService.GetErpsWithHaveFile();
-        string[] filePaths = Directory.GetFiles("C:\\Users\\woami\\Desktop\\measurements-comgas", "*.csv");
+        string[] filePaths = Directory.GetFiles("/app/data", "*.csv");
         List<LastAuxiliary12_000_0> listMeasurements = new List<LastAuxiliary12_000_0>();
 
         Random rand = new Random();
@@ -120,7 +122,7 @@ public class CSVReaderService
 
             if (hasValidData)
             {
-                var timestamp = DateTime.ParseExact(columns[0], "dd/MM/yyyy HH:mm:ss", CultureInfo.InvariantCulture);
+                var timestamp = DateTime.ParseExact(columns[0], "dd/MM/yyyy HH:mm:ss", CultureInfo.InvariantCulture,DateTimeStyles.AssumeLocal);
 
                 var measurement = new LastAuxiliary12_000_0
                 {
@@ -135,12 +137,10 @@ public class CSVReaderService
                     shutoffZASL = new List<float?> { ParseFloat(columns[7]), ParseFloat(columns[8]) },
                     flow = ParseFloat(columns[9]),
                     PDT = new List<float?> { ParseFloat(columns[10]), ParseFloat(columns[11]) },
-                    regulator = new List<float?> { ParseFloat(columns[12]), ParseFloat(columns[13]) },
+                    regulator = new List<float?> { ParseFloat(columns[12]) , ParseFloat(columns[13]) },
                     status = 0,
-                    BatteryReg = new List<float?>(),
-                    type = 1
+                    BatteryReg = new List<float?>([0, 0]),
                 };
-
                 if (existing != null)
                 {
                     updateErpsValue(existing, measurement);
@@ -174,15 +174,31 @@ public class CSVReaderService
                     regulator = existing.regulator,
                     status = existing.status,
                     BatteryReg = existing.BatteryReg,
-                    type = existing.type
                 };
 
                 updateErpsValue(existing, simulated);
+
                 listMeasurements.Add(simulated);
             }
             await _db.SaveChangesAsync();
         }
-            return erps;
+        return listMeasurements.Select(m => new MeasurementsDTO
+        {
+            codId = m.codId,
+            timestamp = m.timestamp.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
+            pressureInputHighLimit = m.pressureInputHighLimit,
+            pressureInputLowLimit = m.pressureInputLowLimit,
+            pressureInput = m.pressureInput,
+            pressureOutput = m.pressureOutput,
+            pressureOutputHighLimit = m.pressureOutputHighLimit,
+            pressureOutputLowLimit = m.pressureOutputLowLimit,
+            shutoffZASL = m.shutoffZASL ?? new List<float?>([0, 0]),
+            flow = m.flow,
+            pdt = m.PDT ?? new List<float?>([0, 0]),
+            regulator = m.regulator ?? new List<float?>([0, 0]),
+            batteryReg = m.BatteryReg ?? new List<float?>([0,0]),
+            status = (int)m.status
+        }).ToList();
     }
 
     public void updateErpsValue(LastAuxiliary12_000_0 existing, LastAuxiliary12_000_0 measurement)
@@ -200,14 +216,13 @@ public class CSVReaderService
         existing.regulator = measurement.regulator;
         existing.status = measurement.status;
         existing.BatteryReg = measurement.BatteryReg;
-        existing.type = measurement.type;
     }
     private float? ParseFloat(string? input)
     {
-        if (input == null) return null;
+        if (input == null) return 0;
         return float.TryParse(input, NumberStyles.Any, CultureInfo.InvariantCulture, out float value)
             ? value
-            : null;
+            : 0;
     }
     public string? ReadLineByDateTime(string filePath, DateTime targetDateTime)
     {

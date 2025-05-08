@@ -1,4 +1,4 @@
-version: '3.9'
+version: '3.3'
 
 services:
   sqlserver:
@@ -6,7 +6,7 @@ services:
     container_name: sqlserver
     environment:
       - ACCEPT_EULA=Y
-      - SA_PASSWORD=MinhaSenhaSuperForte123
+      - SA_PASSWORD=MinhaSenhaSuperForte123  
     ports:
       - "1433:1433"
     volumes:
@@ -21,8 +21,12 @@ services:
     container_name: measurement-generator
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
+      - TZ=America/Sao_Paulo
     ports:
-      - "80:80"
+      - "1111:1111"
+    volumes:
+       # - C:\Users\woami\Desktop\measurements-comgas:/app/data
+      - /home/measurements-comgas:/app/data
     depends_on:
       - sqlserver
     networks:
